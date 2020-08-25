@@ -1,0 +1,262 @@
+<template>
+  <el-dialog
+    class="province-upload"
+    :close-on-click-modal="false"
+    :modal-append-to-body="false"
+    :visible.sync="visible"
+    :before-close="handleCloseAdd"
+    title="省份上报" >
+    <div style="position: relative;width: 100%" v-loading="loading">
+      <span style="margin-right: 15px">请选择:</span>
+      <el-upload
+        ref="upload"
+        action=""
+        :before-remove="beforeRemove"
+        :on-success="handleSuccess"
+        :on-error="handleError"
+        :auto-upload="false"
+        :data="fromup"
+        :on-change="handleChange"
+        :file-list="fileList3"
+        style="display: inline-block"
+        class="upload-demo"
+        accept=".xlsx,.xls">
+        <el-button slot="trigger" size="small" type="primary" class="elbut">选择文件</el-button>
+        <div slot="tip" class="el-upload__tip"/>
+      </el-upload>
+    </div>
+
+    <span slot="footer" class="dialog-footer">
+      <el-button type="primary" class="elbut" @click="submitUpload" :disabled="disabled">上传</el-button>
+      <el-button class="elbut" @click="handleCloseAdd" :disabled="disabled">关闭</el-button>
+      <div v-html="fromhtml" style="padding-left: 15px;padding-top: 20px;text-align:left;font-size: 12px;"></div>
+    </span>
+
+  </el-dialog>
+</template>
+
+<script type="text/ecmascript-6">
+  var proce = process.env.BASE_API
+  var tempFile=[]
+  export default {
+    props: {
+      visible: {
+        type: Boolean
+      },
+      // account:''
+    },
+    data(){
+      return{
+        urlfrom: proce + 'Ta5GAddressOutDetailD/import.do?time='+ new Date().getTime(),
+        // urlform:'',
+        prvnceId: '',
+        fromup: {
+          prvnceId: '',
+          // account:'',
+          state:0
+        },
+        fileList3: [],
+        disabled:false,
+        loading: false,
+        fromhtml:'',
+        temporaryFile:[]
+      }
+    },
+    watch:{
+      fileList3(val,oldval){
+        if (val.length!=0){
+          this.fromhtml=''
+        }
+      }
+    },
+    created() {
+      this.getParam()
+    },
+    methods:{
+      //调用存储过程（备选）
+      storageD(){
+        this.$axios({
+          method:"get",
+          url:proce+ 'Ta5GAddressOutDetailD/cunGuoBeiXuan.do?prvnceId='+ this.fromup.prvnceId
+        }).then(response=>{
+          // console.log(response.data)
+          if (response.data.status=="200"){
+            console.log(response.data)
+          }
+        })
+      },
+
+
+      // 手动上传
+      submitUpload() {
+        this.loading = true;
+        // console.log(this.urlfrom)
+        // this.temporaryFile=this.fileList3
+        if(this.fileList3.length==0){
+          this.fromhtml ="请选择上传文件！";
+          this.loading=false;
+          return;
+        }
+        // this.urlfrom =  proce+ 'Ta5GAddressOutDetailD/import.do?time='+ new Date().getTime();
+        this.disabled = true
+        var formData  = new FormData();
+        formData.append("file",this.$refs.upload.fileList[0].raw)
+        formData.append("prvnceId",this.fromup.prvnceId);
+        formData.append("state",this.fromup.state);
+        this.$axios({
+          method:"POST",
+          data:formData,
+          url:proce+ 'Ta5GAddressOutDetailD/import.do?time='+ new Date().getTime(),
+          header:{
+            'Content-Type': 'multipart/form-data'
+          }
+        }).then(response=>{
+          this.loading = false;
+          this.disabled = false
+          // console.log(response.data)
+          if (response.data.status=="200"){
+            this.$message({
+              message: '上传成功',
+              type: 'success'
+            })
+            this.$parent.refreshData()
+            this.$emit('sendvisible', !this.visible)
+            this.storageD()
+          } else if(response.data.status=="402"){
+            return this.$confirm('已存在导入成功基站id，请确认是否覆盖？', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }).then(() => {
+              this.fromup.state=1
+              this.submitUpload()
+            }).catch(() => {
+              this.fromup.state=0
+              // this.fileList3=[]
+            });
+          }else{
+            this.fromhtml = '<div class="titleRedText" style="font-size: 13px;">导入失败，请重新上传：</div>'+response.data.message
+            this.fileList3.splice(0,1)
+          }
+        })
+        // console.log(this.fileList3)
+        // console.log(this.temporaryFile)
+      },
+      // 关闭模态层
+      handleCloseAdd(done) {
+        if(this.disabled == true){
+
+        }else{
+          this.$emit('sendvisible', !this.visible)
+
+        }
+      },
+      // 上传成功后接收返回值
+      handleSuccess(res, file, fileList) {
+        this.disabled = false
+        this.loading = false;
+        // console.log(res)
+        if (res.status == "200") {
+          this.$message({
+            message: '上传成功',
+            type: 'success'
+          })
+          this.$emit('sendvisible', !this.visible)
+          this.storageD()
+        } else if (res.status==402) {
+          return this.$confirm('基站重复，是否覆盖？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            this.fromup.state=1
+            // this.$refs.upload.submit()
+            // this.$refs.upload.$children[0].post(file);
+            this.submitUpload()
+            // console.log(this.$refs)
+          }).catch(() => {
+            this.fromup.state=0
+            // this.$message({
+            //   type: 'info',
+            //   message: '已取消删除'
+            // });
+            this.fileList3=[]
+          });
+          }else{
+          // console.log(res)
+          this.fromhtml = '<div class="titleRedText" style="font-size: 13px;">导入失败，请重新上传：</div>'+res.message
+          fileList.splice(0,1)
+        }
+
+      },
+      handleError(res, file, fileList){
+        this.disabled = false
+        this.loading = false;
+        // console.log(res)
+      },
+      // 获取地址参数
+      GetQueryString(name) {
+        var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)')
+        var r = window.location.search.substr(1).match(reg)
+        if (r != null) return unescape(r[2])
+        return null
+      },
+      // 获得地址中的省份
+      getParam() {
+        var prvenceId = this.GetQueryString('prvnceid')
+        if (prvenceId) {
+          this.prvnceId = prvenceId
+          this.fromup.prvnceId = prvenceId
+          // console.log(this.fromup)
+          // this.changePro()
+        }
+        // this.fromup.type = this.GetQueryString('type')
+      },
+      beforeRemove(file, fileList) {
+        this.fromhtml = ''
+        // console.log(fileList)
+        return this.$confirm('确定移除'+' '+file.name+'？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          // 查询数据
+          this.fileList3 = [];
+        })
+        // console.log(fileList)
+      },
+      // 文件列表改变
+      handleChange(file, fileList) {
+        // console.log(file)
+        this.fileList3 = fileList.slice(-1)
+        // tempFile=this.fileList3
+        // console.log(tempFile)
+      }
+    },
+  }
+
+</script>
+
+<style>
+  .el-upload-list__item-name{
+    display: inline-block;
+    max-width: 300px;
+  }
+  .el-upload-list {
+    position: absolute;
+    right: 0px;
+    top: -10px;
+  }
+  .el-dialog{
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .titleRedText{
+    color: red;
+    font-size: 17px;
+  }
+/*  .province-upload .el-message-box{
+    vertical-align: top;
+    margin-top: 19vh;
+  }*/
+</style>
