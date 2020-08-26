@@ -1,0 +1,14 @@
+/*修改滚动条样式*/
+  .step2-list-arr::-webkit-scrollbar,.step-main-r::-webkit-scrollbar{
+    width:6px;
+    height:6px;
+    /**/
+  }
+  .step2-list-arr::-webkit-scrollbar-track,.step-main-r::-webkit-scrollbar-track{
+    background: rgb(239, 239, 239);
+    border-radius:2px;
+  }
+  .step2-list-arr::-webkit-scrollbar-thumb,.step-main-r::-webkit-scrollbar-thumb{
+    background: #bfbfbf;
+    border-radius:10px;
+  }
