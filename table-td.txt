@@ -1,0 +1,6 @@
+table中td 内容超长 自动折行 （含字母数字文字）
+
+table td{
+ white-space:pre-wrap;   // 保留空白符序列，但是正常地进行换行。
+ word-wrap: break-word;  //在长单词数字或 URL 地址内部进行换行
+}
