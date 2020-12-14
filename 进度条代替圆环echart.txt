@@ -1,0 +1,21 @@
+<el-progress class="progress-two circle" type="circle" style="margin: 30px 0 0 45px" :percentage="percentage" :stroke-width="14"></el-progress>
+              <svg>
+                <defs>
+                  <linearGradient id="colors" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#42BBF6" stop-opacity="1"></stop>
+                    <stop offset="100%" style="stop-color:#1677FF" stop-opacity="1"></stop>
+                  </linearGradient>
+                </defs>
+              </svg>
+
+style:
+.el-progress {
+    background: url('~@/assets/marketing/userPortrait/percentage.png') no-repeat center center
+    background-size: 90% 90%
+  }
+  .el-carousel__container {
+    height: 310px!important
+  }
+  .circle svg>path:nth-child(2) {
+    stroke: url(#colors);
+  }
