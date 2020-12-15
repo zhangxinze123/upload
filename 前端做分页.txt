@@ -1,0 +1,29 @@
+<pagination
+                v-show="sheetTotal>0"
+                :total="sheetTotal"
+                :page.sync="sheetPageNum"
+                style="margin-top: 0"
+                :limit.sync="sheetTotalPageSize"
+                @pagination="sheetPageChange"
+              />
+
+
+sheetTotal:0,
+sheetPageNum:1,
+sheetTotalPageSize:10,
+
+
+sheetPageChange(){
+          this.loading = true
+          var vm=this
+          setTimeout(function(){
+            vm.tableData = vm.tableLabelData.slice(vm.sheetTotalPageSize*(vm.sheetPageNum-1),vm.sheetTotalPageSize*(vm.sheetPageNum-1)+vm.sheetTotalPageSize)
+            vm.loading = false
+            }, 300);
+          },
+
+
+数据接口初始化方法
+                this.sheetPageNum=1
+                this.sheetTotalPageSize=10
+                this.tableData = response.data.slice(this.sheetTotalPageSize*(this.sheetPageNum-1),this.sheetTotalPageSize*(this.sheetPageNum-1)+this.sheetTotalPageSize)
